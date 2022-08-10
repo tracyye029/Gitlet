@@ -1,0 +1,87 @@
+# Test error conditions for remote commands
+C D1
+# Set up one commit with two files.
+# Initialize and add two files.
+# Standard commands and definitions
+> init
+<<<
+D DATE "Date: \w\w\w \w\w\w \d+ \d\d:\d\d:\d\d \d\d\d\d [-+]\d\d\d\d"
+# A status log header RE.  Captures the commit id in its sole group.
+D COMMIT_HEAD "commit ([a-f0-9]+)[ \t]*\n(?:Merge:\s+[0-9a-f]{7}\s+[0-9a-f]{7}[ ]*\n)?${DATE}"
+# A full log entry.  Captures the entry. Assume logs messages don't contain
+# "==="
+D COMMIT_LOG "(===[ ]*\ncommit [a-f0-9]+[ ]*\n(?:Merge:\s+[0-9a-f]{7}\s+[0-9a-f]{7}[ ]*\n)?${DATE}[ ]*\n(?:.|\n)*?(?=\Z|\n===))"
+# An arbitrary line of text (works even with ?s)
+D ARBLINE "[^\n]*(?=\n|\Z)"
+# Zero or more arbitrary full lines of text.
+D ARBLINES "(?:(?:.|\n)*(?:\n|\Z)|\A|\Z)"
++ f.txt wug.txt
++ g.txt notwug.txt
+> add g.txt
+<<<
+> add f.txt
+<<<
+> commit "Two files"
+<<<
+> log
+===
+${COMMIT_HEAD}
+Two files
+
+===
+${COMMIT_HEAD}
+initial commit
+
+<<<*
+D R1_TWO "${1}"
+D R1_INIT "${2}"
+
+# Set up second repository with one commit + inita.
+
+C D2
+> init
+<<<
++ k.txt wug2.txt
+> add k.txt
+<<<
+> commit "Add k in repo 2"
+<<<
+> log
+===
+${COMMIT_HEAD}
+Add k in repo 2
+
+===
+${COMMIT_HEAD}
+initial commit
+
+<<<*
+D R2_K "${1}"
+D R2_INIT "${2}"
+
+# Fetch remote master and reset our master to it.
+# Then add another commit and push.
+> add-remote R1 ../Dx/.gitlet
+<<<
+> add-remote R1 ../D1/.gitlet
+A remote with that name already exists.
+<<<
+> fetch R1 master
+Remote directory not found.
+<<<
+> push R1 master
+Remote directory not found.
+<<<
+> rm-remote R1
+<<<
+> rm-remote glorp
+A remote with that name does not exist.
+<<<
+> add-remote R1 ../D1/.gitlet
+<<<
+> fetch R1 glorp
+That remote does not have that branch.
+<<<
+> push R1 master
+Please pull down remote changes before pushing.
+<<<
